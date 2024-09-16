@@ -12,7 +12,7 @@ def get_video_url(youtube_url):
         video_url = info_dict.get("url", None)
     return video_url
 
-raw_url = input("Insira a URL do vídeo: ")
+raw_url = input("\nInsira a URL do vídeo: ")
 video_url = get_video_url(raw_url)
 face_cascade = cv2.CascadeClassifier('./models/haarcascade_frontalface_alt2.xml')
 video_capture = cv2.VideoCapture(video_url)

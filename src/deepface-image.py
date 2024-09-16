@@ -2,10 +2,10 @@ import cv2
 from deepface import DeepFace
 
 # Load the face detection model
-face_cascade = cv2.CascadeClassifier('./models/haarcascade_frontalface_alt2.xml')
+face_cascade = cv2.CascadeClassifier('models/haarcascade_frontalface_alt2.xml')
 
 # Read the image
-image = cv2.imread('./images/sad_1.jpg')
+image = cv2.imread('images/sad-person.jpeg')
 
 # Check if the image was loaded successfully
 if image is None:

@@ -11,8 +11,8 @@ from utils.inference import load_detection_model
 from utils.preprocessor import preprocess_input
 
 # Parameters for loading data and images
-detection_model_path = './models/haarcascade_frontalface_default.xml'
-emotion_model_path = './models/fer2013_mini_XCEPTION.102-0.66.hdf5'
+detection_model_path = 'models/haarcascade_frontalface_alt2.xml'
+emotion_model_path = 'models/fer2013_mini_XCEPTION.107-0.66.hdf5'
 emotion_labels = get_labels('fer2013')
 
 # Hyper-parameters for bounding boxes shape
@@ -79,10 +79,10 @@ def process_image(image_path):
     # Create a window
     cv2.namedWindow('Emotion Detection', cv2.WINDOW_NORMAL)
     # Resize the window to the desired dimensions (width, height)
-    cv2.resizeWindow('Emotion Detection', 1000, 800)
+    cv2.resizeWindow('Emotion Detection', 800, 600)
     cv2.imshow('Emotion Detection', bgr_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
 # Example usage: replace 'image_path.jpg' with your image file path
-process_image('./images/sad_1.jpg')
+process_image('images/sad-person.jpeg')

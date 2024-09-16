@@ -40,7 +40,7 @@ def get_video_url(youtube_url):
         video_url = info_dict.get("url", None)
     return video_url
 
-raw_url = input("Insira a URL do vídeo: ")
+raw_url = input("\nInsira a URL do vídeo: ")
 video_url = get_video_url(raw_url)
 # starting video streaming
 cv2.namedWindow('window_frame')
@@ -98,5 +98,6 @@ while True:
     cv2.imshow('window_frame', bgr_image)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+    
 video_capture.release()
 cv2.destroyAllWindows()
