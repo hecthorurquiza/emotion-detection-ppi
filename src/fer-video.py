@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import yt_dlp
+import os
+import csv
 from statistics import mode
 from keras.api.models import load_model 
 from utils.datasets import get_labels
@@ -10,6 +12,7 @@ from utils.inference import draw_bounding_box
 from utils.inference import apply_offsets
 from utils.inference import load_detection_model
 from utils.preprocessor import preprocess_input
+from collections import defaultdict
 
 # parameters for loading data and images
 detection_model_path = './models/haarcascade_frontalface_alt2.xml'
@@ -29,6 +32,7 @@ emotion_target_size = emotion_classifier.input_shape[1:3]
 
 # starting lists for calculating modes
 emotion_window = []
+emotions_count = defaultdict(int)
 
 def get_video_url(youtube_url):
     ydl_opts = {
@@ -67,6 +71,7 @@ while True:
         emotion_probability = np.max(emotion_prediction)
         emotion_label_arg = np.argmax(emotion_prediction)
         emotion_text = emotion_labels[emotion_label_arg]
+        emotions_count[emotion_text] += 1
         emotion_window.append(emotion_text)
 
         if len(emotion_window) > frame_window:
@@ -101,3 +106,17 @@ while True:
     
 video_capture.release()
 cv2.destroyAllWindows()
+
+file_name = "fer_emotions.csv"
+file_save_path = f'./src/emotions_count/{file_name}'
+
+# Create the directory if it doesn't exist
+os.makedirs(os.path.dirname(file_save_path), exist_ok=True)
+
+with open(file_save_path, 'w', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow(["Emotion", "Count"])  # header row
+    for emotion, count in emotions_count.items():
+        writer.writerow([emotion, count])
+
+print(f"Contagem de emoções salva no arquivo: {file_name}")
