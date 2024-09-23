@@ -11,7 +11,6 @@ def predict(chosen_model, img, classes=[], conf=0.5):
 
     return results
 
-
 def predict_and_detect(chosen_model, img, classes=[], conf=0.5):
     results = predict(chosen_model, img, classes, conf=conf)
 
@@ -21,7 +20,7 @@ def predict_and_detect(chosen_model, img, classes=[], conf=0.5):
                           (int(box.xyxy[0][2]), int(box.xyxy[0][3])), (255, 0, 0), 2)
             cv2.putText(img, f"{result.names[int(box.cls[0])]}",
                         (int(box.xyxy[0][0]), int(box.xyxy[0][1]) - 10),
-                        cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 1)
+                        cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 0), 2)
     return img, results
 
 image = cv2.imread('images/sad-person.jpeg')

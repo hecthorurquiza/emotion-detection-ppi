@@ -50,7 +50,12 @@ video_url = get_video_url(raw_url)
 cv2.namedWindow('window_frame')
 video_capture = cv2.VideoCapture(video_url)
 while True:
-    bgr_image = video_capture.read()[1]
+    success, bgr_image = video_capture.read()
+
+    if not success or bgr_image is None:
+        print("Fim do video")
+        break
+
     gray_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
     rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
     faces = detect_faces(face_detection, gray_image)

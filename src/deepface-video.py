@@ -23,7 +23,12 @@ emotions_count = defaultdict(int)
 
 while True:
     # Capture frame-by-frame
-    ret, frame = video_capture.read()
+    success, frame = video_capture.read()
+
+    if not success or frame is None:
+        print("Fim do video")
+        break
+
     # Convert frame to grayscale
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # Convert grayscale frame to RGB format
