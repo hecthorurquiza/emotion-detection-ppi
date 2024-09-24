@@ -4,6 +4,7 @@ import csv
 import yt_dlp
 from ultralytics import YOLO
 from collections import defaultdict
+from songs.sad_songs import sad_songs_dict
 
 emotions_count = defaultdict(int)
 
@@ -38,37 +39,39 @@ def predict_and_detect(chosen_model, img, classes=[], conf=0.5):
             emotions_count[result.names[int(box.cls[0])]] += 1
     return img, results
 
-raw_url = input("\nInsira a URL do vídeo: ")
-video_url = get_video_url(raw_url)
 model = YOLO("notebook/runs/detect/train/weights/best.pt")
-video_capture = cv2.VideoCapture(video_url)
 
-while True:
-    success, frame = video_capture.read()
+for key, value in sad_songs_dict.items():
+    raw_url = value
+    video_url = get_video_url(raw_url)
+    video_capture = cv2.VideoCapture(video_url)
 
-    if not success or frame is None:
-        print("Fim do video")
-        break
-    
-    result_img, _ = predict_and_detect(model, frame)
-    
-    cv2.imshow("Image", result_img)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-    
-video_capture.release()
-cv2.destroyAllWindows()
+    while True:
+        success, frame = video_capture.read()
 
-file_name = "yolov8_emotions.csv"
-file_save_path = f'./src/emotions_count/{file_name}'
+        if not success or frame is None:
+            print("Fim do video")
+            break
+        
+        result_img, _ = predict_and_detect(model, frame)
+        
+        cv2.imshow(f"{key}_video", result_img)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        
+    video_capture.release()
+    cv2.destroyAllWindows()
 
-# Create the directory if it doesn't exist
-os.makedirs(os.path.dirname(file_save_path), exist_ok=True)
+    file_name = f"{key}_emotions.csv"
+    file_save_path = f'./src/emotions_count/yolov8/{file_name}'
 
-with open(file_save_path, 'w', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow(["Emotion", "Count"])  # header row
-    for emotion, count in emotions_count.items():
-        writer.writerow([emotion, count])
+    # Create the directory if it doesn't exist
+    os.makedirs(os.path.dirname(file_save_path), exist_ok=True)
 
-print(f"Contagem de emoções salva no arquivo: {file_name}")
+    with open(file_save_path, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Emotion", "Count"])  # header row
+        for emotion, count in emotions_count.items():
+            writer.writerow([emotion, count])
+
+    print(f"Contagem de emoções salva no arquivo: {file_name}")

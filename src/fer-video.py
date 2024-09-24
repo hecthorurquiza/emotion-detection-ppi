@@ -13,6 +13,7 @@ from utils.inference import apply_offsets
 from utils.inference import load_detection_model
 from utils.preprocessor import preprocess_input
 from collections import defaultdict
+from songs.sad_songs import sad_songs_dict
 
 # parameters for loading data and images
 detection_model_path = './models/haarcascade_frontalface_alt2.xml'
@@ -44,84 +45,85 @@ def get_video_url(youtube_url):
         video_url = info_dict.get("url", None)
     return video_url
 
-raw_url = input("\nInsira a URL do vídeo: ")
-video_url = get_video_url(raw_url)
-# starting video streaming
-cv2.namedWindow('window_frame')
-video_capture = cv2.VideoCapture(video_url)
-while True:
-    success, bgr_image = video_capture.read()
+for key, value in sad_songs_dict.items():
+    raw_url = value
+    video_url = get_video_url(raw_url)
+    cv2.namedWindow(f'{key}_window_frame')
+    video_capture = cv2.VideoCapture(video_url)
 
-    if not success or bgr_image is None:
-        print("Fim do video")
-        break
+    while True:
+        success, bgr_image = video_capture.read()
 
-    gray_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
-    rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
-    faces = detect_faces(face_detection, gray_image)
+        if not success or bgr_image is None:
+            print("Fim do video")
+            break
 
-    for face_coordinates in faces:
+        gray_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
+        rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
+        faces = detect_faces(face_detection, gray_image)
 
-        x1, x2, y1, y2 = apply_offsets(face_coordinates, emotion_offsets)
-        gray_face = gray_image[y1:y2, x1:x2]
-        try:
-            gray_face = cv2.resize(gray_face, (emotion_target_size))
-        except:
-            continue
+        for face_coordinates in faces:
 
-        gray_face = preprocess_input(gray_face, True)
-        gray_face = np.expand_dims(gray_face, 0)
-        gray_face = np.expand_dims(gray_face, -1)
-        emotion_prediction = emotion_classifier.predict(gray_face)
-        emotion_probability = np.max(emotion_prediction)
-        emotion_label_arg = np.argmax(emotion_prediction)
-        emotion_text = emotion_labels[emotion_label_arg]
-        emotions_count[emotion_text] += 1
-        emotion_window.append(emotion_text)
+            x1, x2, y1, y2 = apply_offsets(face_coordinates, emotion_offsets)
+            gray_face = gray_image[y1:y2, x1:x2]
+            try:
+                gray_face = cv2.resize(gray_face, (emotion_target_size))
+            except:
+                continue
 
-        if len(emotion_window) > frame_window:
-            emotion_window.pop(0)
-        try:
-            emotion_mode = mode(emotion_window)
-        except:
-            continue
+            gray_face = preprocess_input(gray_face, True)
+            gray_face = np.expand_dims(gray_face, 0)
+            gray_face = np.expand_dims(gray_face, -1)
+            emotion_prediction = emotion_classifier.predict(gray_face)
+            emotion_probability = np.max(emotion_prediction)
+            emotion_label_arg = np.argmax(emotion_prediction)
+            emotion_text = emotion_labels[emotion_label_arg]
+            emotions_count[emotion_text] += 1
+            emotion_window.append(emotion_text)
 
-        if emotion_text == 'angry':
-            color = emotion_probability * np.asarray((255, 0, 0))
-        elif emotion_text == 'sad':
-            color = emotion_probability * np.asarray((0, 0, 255))
-        elif emotion_text == 'happy':
-            color = emotion_probability * np.asarray((255, 255, 0))
-        elif emotion_text == 'surprise':
-            color = emotion_probability * np.asarray((0, 255, 255))
-        else:
-            color = emotion_probability * np.asarray((0, 255, 0))
+            if len(emotion_window) > frame_window:
+                emotion_window.pop(0)
+            try:
+                emotion_mode = mode(emotion_window)
+            except:
+                continue
 
-        color = color.astype(int)
-        color = color.tolist()
+            if emotion_text == 'angry':
+                color = emotion_probability * np.asarray((255, 0, 0))
+            elif emotion_text == 'sad':
+                color = emotion_probability * np.asarray((0, 0, 255))
+            elif emotion_text == 'happy':
+                color = emotion_probability * np.asarray((255, 255, 0))
+            elif emotion_text == 'surprise':
+                color = emotion_probability * np.asarray((0, 255, 255))
+            else:
+                color = emotion_probability * np.asarray((0, 255, 0))
 
-        draw_bounding_box(face_coordinates, rgb_image, color)
-        draw_text(face_coordinates, rgb_image, emotion_mode,
-                  color, 0, -45, 1, 1)
+            color = color.astype(int)
+            color = color.tolist()
 
-    bgr_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
-    cv2.imshow('window_frame', bgr_image)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-    
-video_capture.release()
-cv2.destroyAllWindows()
+            draw_bounding_box(face_coordinates, rgb_image, color)
+            draw_text(face_coordinates, rgb_image, emotion_mode,
+                    color, 0, -45, 1, 1)
 
-file_name = "fer_emotions.csv"
-file_save_path = f'./src/emotions_count/{file_name}'
+        bgr_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
+        cv2.imshow(f'{key}_window_frame', bgr_image)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        
+    video_capture.release()
+    cv2.destroyAllWindows()
 
-# Create the directory if it doesn't exist
-os.makedirs(os.path.dirname(file_save_path), exist_ok=True)
+    file_name = f"{key}_emotions.csv"
+    file_save_path = f'./src/emotions_count/fer/{file_name}'
 
-with open(file_save_path, 'w', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow(["Emotion", "Count"])  # header row
-    for emotion, count in emotions_count.items():
-        writer.writerow([emotion, count])
+    # Create the directory if it doesn't exist
+    os.makedirs(os.path.dirname(file_save_path), exist_ok=True)
 
-print(f"Contagem de emoções salva no arquivo: {file_name}")
+    with open(file_save_path, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Emotion", "Count"])  # header row
+        for emotion, count in emotions_count.items():
+            writer.writerow([emotion, count])
+
+    print(f"Contagem de emoções salva no arquivo: {file_name}")
